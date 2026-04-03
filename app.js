@@ -9,7 +9,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/saludo', (req, res) => {
     res.json({
         mensaje: "¡Hola desde el backend de la Casimiro Sotelo!",
-        estudiante: "Dylan",
+        estudiante1: "Dylan",
+        estudiante2: "Josue David",
         universidad: "UNCSM",
         unidad: "Unidad II: Herramientas para el desarrollo Web"
     });
