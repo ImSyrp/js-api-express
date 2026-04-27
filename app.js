@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 
 const bodyParser = require('body-parser');
@@ -7,10 +8,29 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3005;
 
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
+
+// Registro de actividad en la consola
+
+app.use((req, res, next) => {
+    const tiempo = new Date().toISOString();
+    console.log(`[LOG] ${tiempo} - Método: ${req.method} - URL: ${req.url}`);
+    next();
+});
+
+const validarAcceso = (req, res, next) => {
+    const token = req.query.token;
+
+    if (token === 'admin123') {
+        next();
+    } else {
+        res.status(401).send('<h1>No autorizado</h1><p>Token inválido</p>');
+    }
+};
 
 app.get('/api/saludo', (req, res) => {
     res.json({
@@ -33,6 +53,18 @@ app.get('/users/:id', (req, res) => {
   const id = req.params.id;
 
   res.json({ usuario: id });
+});
+
+app.get('/api/recurso', validarAcceso, (req, res) => {
+  res.json({
+      estado: "conexion exitosa",
+      data: "Este es un mensaje protegido desde el Backend",
+      timestamp: new Date()
+    });
+});
+
+app.use((eq, res) => {
+    res.status(404).send('<h2>Error 404: Recurso no encontrado</h2><p>La ruta solicitada no existe en este servidor.</p>');
 });
 
 app.listen(PORT, () => {
