@@ -67,6 +67,14 @@ app.use((eq, res) => {
     res.status(404).send('<h2>Error 404: Recurso no encontrado</h2><p>La ruta solicitada no existe en este servidor.</p>');
 });
 
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+        error: 'Error interno del servidor',
+        mensaje: 'Algo salió mal. Por favor, inténtalo de nuevo más tarde.'
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
