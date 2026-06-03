@@ -1,21 +1,33 @@
 require('dotenv').config();
 
-const { Pool } = require('pg');
+const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const pg = require('pg');
 
-const conexion = new Pool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT
-});
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
-conexion.connect()
-    .then(() => {
-        console.log('[SISTEMA] Conexión con PostgreSQL establecida ✅');
-    })
-    .catch((err) => {
-        console.error('Error de conexión:', err);
-    });
+const verificarAccesoPrisma = async (req, res, next) => {
+    const llaveRecibida = req.query.llave;
 
-module.exports = conexion;
+    try {
+        const acceso = await prisma.acceso.findUnique({
+            where: { tokenLlave: llaveRecibida }
+        });
+
+        if (acceso) {
+            console.log(`[AUTH] Bienvenido, ${acceso.usuarioAsignado}`);
+            next();
+        } else {
+            res.status(401).send('<h1>401 - Token Inválido</h1>');
+        }
+    } catch (error) {
+        res.status(500).json({ error: "Error de conexión con Prisma" });
+    }
+};
+
+module.exports = {
+    prisma,
+    verificarAccesoPrisma
+};
