@@ -1,15 +1,6 @@
-async function conectarConBackend() {
-    try {
-        const respuesta = await fetch('/api/saludo');
-        const datos = await respuesta.json();
-
-
-        console.log(datos);
-        alert(datos.mensaje);
-    } catch (error) {
-        console.error("Error al conectar con el backend: ", error);
-        
-    }
-}
-
-conectarConBackend();
+const token = localStorage.getItem('auth_token_digital');
+if (token) {
+    window.location.href = '/dashboard.html';
+} else {
+    window.location.href = '/login.html';
+}

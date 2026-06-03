@@ -12,3 +12,11 @@ model Acceso {
   tokenLlave String @unique
   creadoEn DateTime @default(now())
 }
+
+model Usuario {
+  id Int @id @default(autoincrement())
+  nombre String?
+  email String @unique
+  passwordHash String
+  token_acceso String? @unique
+}

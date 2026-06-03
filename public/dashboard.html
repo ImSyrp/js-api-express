@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasarela de Control - Dashboard</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Panel de Control</h2>
+        <div class="subtitle" id="welcomeText">Verificando sesión...</div>
+
+        <div class="dashboard-card" id="dashboardContent" style="display: none;">
+            <div class="profile-section">
+                <div class="profile-row">
+                    <span class="label-title">Usuario (ID)</span>
+                    <span class="value-desc" id="userId"></span>
+                </div>
+                <div class="profile-row">
+                    <span class="label-title">Correo</span>
+                    <span class="value-desc" id="userEmail"></span>
+                </div>
+                <div class="profile-row">
+                    <span class="label-title">Rol</span>
+                    <span class="value-desc" id="userRole"></span>
+                </div>
+                <div class="profile-row">
+                    <span class="label-title">Carrera</span>
+                    <span class="value-desc" id="userMajor"></span>
+                </div>
+            </div>
+
+            <div class="greeting-section">
+                <div class="label-title" style="margin-bottom: 0.5rem;">Mensaje del Servidor</div>
+                <div id="apiGreeting" style="font-weight: 500; font-size: 1.1rem; color: #60a5fa;">Cargando...</div>
+            </div>
+
+            <button id="logoutBtn" class="btn-secondary">Cerrar Sesión Segura</button>
+        </div>
+
+        <div class="error-msg" id="dashboardError"></div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('auth_token_digital');
+        const dashboardContent = document.getElementById('dashboardContent');
+        const welcomeText = document.getElementById('welcomeText');
+        const dashboardError = document.getElementById('dashboardError');
+
+        if (!token) {
+            window.location.href = '/login.html';
+        } else {
+            try {
+                const payloadBase64 = token.split('.')[1];
+                const decodedPayload = JSON.parse(decodeURIComponent(escape(atob(payloadBase64))));
+
+                welcomeText.innerText = `¡Bienvenido al sistema, ${decodedPayload.usuario}!`;
+                document.getElementById('userId').innerText = decodedPayload.id;
+                document.getElementById('userEmail').innerText = decodedPayload.usuario;
+                document.getElementById('userRole').innerText = decodedPayload.rol;
+                document.getElementById('userMajor').innerText = decodedPayload.carrera;
+
+                dashboardContent.style.display = 'flex';
+
+                fetchSaludo(decodedPayload.token_acceso);
+
+            } catch (err) {
+                console.error("Error al decodificar sesión:", err);
+                dashboardError.innerText = "La sesión no es válida. Redirigiendo...";
+                setTimeout(() => {
+                    localStorage.removeItem('auth_token_digital');
+                    window.location.href = '/login.html';
+                }, 3000);
+            }
+        }
+
+        async function fetchSaludo(tokenAcceso) {
+            const apiGreeting = document.getElementById('apiGreeting');
+            try {
+                const response = await fetch(`/api/saludo?llave=${tokenAcceso}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.mensaje || 'Error al obtener saludo de base de datos.');
+                }
+
+                apiGreeting.innerText = data.data.mensaje;
+            } catch (err) {
+                apiGreeting.innerText = err.message;
+                apiGreeting.style.color = '#ef4444';
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('auth_token_digital');
+            window.location.href = '/login.html';
+        });
+    </script>
+</body>
+</html>
